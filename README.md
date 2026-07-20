@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="assets/prettyRenders_5.gif" alt="Lenia small lone organism" width="100%" />
+</p>
 # Lenia Live Wallpaper
 
 A native Windows live wallpaper that runs [Lenia](https://en.wikipedia.org/wiki/Lenia)
@@ -11,8 +14,7 @@ port of the WebGL code from that page — the interactive Lenia demo behind Emer
 Garden’s video *[Artificial Life](https://www.youtube.com/watch?v=2g-CrQfYNtE)*.
 
 <p align="center">
-  <img src="assets/prettyRenders_1.PNG" alt="Lenia worm-like organisms" width="48%" />
-  <img src="icon.jpg" alt="Lenia radial organism" width="48%" />
+  <img src="assets/prettyRenders_6.gif" alt="Lenia worm-like organisms" width="100%" />
 </p>
 
 ## Features
