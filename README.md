@@ -1,7 +1,7 @@
+# Lenia Live Wallpaper
 <p align="center">
   <img src="assets/prettyRenders_5.gif" alt="Lenia small lone organism" width="100%" />
 </p>
-# Lenia Live Wallpaper
 
 A native Windows live wallpaper that runs [Lenia](https://en.wikipedia.org/wiki/Lenia)
 (3-channel, multi-kernel continuous cellular automata) as a GPU shader behind your
