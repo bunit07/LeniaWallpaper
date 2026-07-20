@@ -30,6 +30,14 @@ Garden’s video *[Artificial Life](https://www.youtube.com/watch?v=2g-CrQfYNtE)
 - Power-friendly: precomputed kernel taps, low-power GPU preference on hybrid laptops,
   coalescable waitable timer, RGBA16F state textures.
 
+<p align="center">
+  <img src="assets/prettyRenders_1.PNG" alt="Lenia worm-like organisms" width="100%" />
+</p>
+<p align="center">
+  <img src="assets/prettyRenders_2.PNG" alt="Lenia worm-like organisms" width="48%" />
+  <img src="assets/prettyRenders_3.PNG" alt="Lenia small self-replicating organisms" width="48%" />
+</p>
+
 ## Build
 
 Requires Visual Studio 2022 (C++ workload). No other dependencies.
