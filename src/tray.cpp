@@ -14,9 +14,19 @@ constexpr UINT kIdPause = 104;
 constexpr UINT kIdStartup = 105;
 constexpr UINT kIdExit = 106;
 constexpr UINT kIdName = 107;
+constexpr UINT kIdDiscovery = 200;
+constexpr UINT kIdAddBase = 300;     // + index into currents_
+constexpr UINT kIdRemoveBase = 400;  // + index into currents_
+constexpr UINT kIdFavBase = 500;     // + index into favorites_
+constexpr UINT kMaxMenuItems = 80;
 
 const wchar_t* kRunKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
 const wchar_t* kRunValue = L"LeniaWallpaper";
+
+std::wstring TruncateMenuLabel(std::wstring s, size_t maxChars = 48) {
+    if (s.size() > maxChars) s = s.substr(0, maxChars - 3) + L"...";
+    return s;
+}
 
 }  // namespace
 
@@ -64,6 +74,15 @@ void TrayIcon::SetSpeciesNames(const std::vector<std::string>& names) {
     UpdateTip();
 }
 
+void TrayIcon::SetFavoritesMenu(bool discoveryEnabled, bool randomSoup,
+                                const std::vector<SpeciesEntry>& favorites,
+                                const std::vector<SpeciesEntry>& currents) {
+    discoveryEnabled_ = discoveryEnabled;
+    randomSoup_ = randomSoup;
+    favorites_ = favorites;
+    currents_ = currents;
+}
+
 void TrayIcon::SetStatusText(const std::string& status) {
     status_ = Utf8ToWide(status);
     UpdateTip();
@@ -97,7 +116,52 @@ void TrayIcon::ShowMenu() {
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(menu, MF_STRING, kIdNext, L"Next species");
     AppendMenuW(menu, MF_STRING, kIdReseed, L"Re-seed");
-    AppendMenuW(menu, MF_STRING, kIdSoup, L"Random soup");
+    AppendMenuW(menu, MF_STRING | (randomSoup_ ? MF_CHECKED : 0), kIdSoup, L"Random soup");
+    AppendMenuW(menu, MF_STRING | (discoveryEnabled_ ? MF_CHECKED : 0), kIdDiscovery,
+                L"Discovery");
+
+    HMENU favMenu = CreatePopupMenu();
+    HMENU addMenu = CreatePopupMenu();
+    HMENU removeMenu = CreatePopupMenu();
+    size_t addCount = 0, removeCount = 0;
+    for (size_t i = 0; i < currents_.size() && i < kMaxMenuItems; i++) {
+        const SpeciesEntry& cur = currents_[i];
+        if (cur.path.empty()) continue;
+        std::wstring label = TruncateMenuLabel(Utf8ToWide(cur.name.empty() ? cur.path : cur.name));
+        bool isFav = false;
+        for (const auto& f : favorites_) {
+            if (f.path == cur.path) {
+                isFav = true;
+                break;
+            }
+        }
+        if (!isFav) {
+            AppendMenuW(addMenu, MF_STRING, kIdAddBase + (UINT)i, label.c_str());
+            addCount++;
+        } else {
+            AppendMenuW(removeMenu, MF_STRING, kIdRemoveBase + (UINT)i, label.c_str());
+            removeCount++;
+        }
+    }
+    if (addCount == 0)
+        AppendMenuW(addMenu, MF_STRING | MF_GRAYED, 0, L"(none)");
+    if (removeCount == 0)
+        AppendMenuW(removeMenu, MF_STRING | MF_GRAYED, 0, L"(none)");
+    AppendMenuW(favMenu, MF_POPUP, (UINT_PTR)addMenu, L"Add current");
+    AppendMenuW(favMenu, MF_POPUP, (UINT_PTR)removeMenu, L"Remove current");
+    AppendMenuW(favMenu, MF_SEPARATOR, 0, nullptr);
+
+    if (favorites_.empty()) {
+        AppendMenuW(favMenu, MF_STRING | MF_GRAYED, 0, L"(no favorites)");
+    } else {
+        for (size_t i = 0; i < favorites_.size() && i < kMaxMenuItems; i++) {
+            const SpeciesEntry& f = favorites_[i];
+            std::wstring label = TruncateMenuLabel(Utf8ToWide(f.name.empty() ? f.path : f.name));
+            AppendMenuW(favMenu, MF_STRING, kIdFavBase + (UINT)i, label.c_str());
+        }
+    }
+    AppendMenuW(menu, MF_POPUP, (UINT_PTR)favMenu, L"Favorites");
+
     AppendMenuW(menu, MF_STRING | (userPaused_ ? MF_CHECKED : 0), kIdPause,
                 userPaused_ ? L"Resume" : L"Pause");
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
@@ -114,13 +178,29 @@ void TrayIcon::ShowMenu() {
                                     owner_, nullptr);
     DestroyMenu(menu);
 
-    switch (cmd) {
-    case kIdNext: if (cb_.onNextSpecies) cb_.onNextSpecies(); break;
-    case kIdReseed: if (cb_.onReseed) cb_.onReseed(); break;
-    case kIdSoup: if (cb_.onRandomSoup) cb_.onRandomSoup(); break;
-    case kIdPause: if (cb_.onTogglePause) cb_.onTogglePause(); break;
-    case kIdStartup: if (cb_.onToggleStartup) cb_.onToggleStartup(); break;
-    case kIdExit: if (cb_.onExit) cb_.onExit(); break;
+    if (cmd == kIdNext) {
+        if (cb_.onNextSpecies) cb_.onNextSpecies();
+    } else if (cmd == kIdReseed) {
+        if (cb_.onReseed) cb_.onReseed();
+    } else if (cmd == kIdSoup) {
+        if (cb_.onToggleRandomSoup) cb_.onToggleRandomSoup();
+    } else if (cmd == kIdPause) {
+        if (cb_.onTogglePause) cb_.onTogglePause();
+    } else if (cmd == kIdStartup) {
+        if (cb_.onToggleStartup) cb_.onToggleStartup();
+    } else if (cmd == kIdExit) {
+        if (cb_.onExit) cb_.onExit();
+    } else if (cmd == kIdDiscovery) {
+        if (cb_.onToggleDiscovery) cb_.onToggleDiscovery();
+    } else if (cmd >= kIdAddBase && cmd < kIdAddBase + kMaxMenuItems) {
+        size_t i = cmd - kIdAddBase;
+        if (i < currents_.size() && cb_.onAddFavorite) cb_.onAddFavorite(currents_[i].path);
+    } else if (cmd >= kIdRemoveBase && cmd < kIdRemoveBase + kMaxMenuItems) {
+        size_t i = cmd - kIdRemoveBase;
+        if (i < currents_.size() && cb_.onRemoveFavorite) cb_.onRemoveFavorite(currents_[i].path);
+    } else if (cmd >= kIdFavBase && cmd < kIdFavBase + kMaxMenuItems) {
+        size_t i = cmd - kIdFavBase;
+        if (i < favorites_.size() && cb_.onSelectFavorite) cb_.onSelectFavorite(favorites_[i].path);
     }
 }
 

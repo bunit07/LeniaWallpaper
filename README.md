@@ -57,7 +57,8 @@ python tools\fetch_catalog.py
 Start `build\LeniaWallpaper.exe`. The app looks for the catalog next to the exe,
 then one directory up (so running from `build\` in this repo works).
 
-Tray menu: species name(s), **Next species**, **Re-seed**, **Random soup**,
+Tray menu: species name(s), **Next species**, **Re-seed**, **Random soup** toggle,
+**Discovery** toggle, **Favorites** (add/remove current, pick a favorite),
 **Pause/Resume**, **Run at startup**, **Exit** (restores your static wallpaper).
 
 ## Configuration — `config.json` (next to the exe)
@@ -66,7 +67,7 @@ Tray menu: species name(s), **Next species**, **Re-seed**, **Random soup**,
 |---|---|---|
 | `fps` | `24` | Render/sim rate (1–60). |
 | `cellScale` | `4` | Screen pixels per sim cell. |
-| `rotateOnResumeSeconds` | `15` | Away longer than this → new species on return. |
+| `rotateOnResumeSeconds` | `5` | Away longer than this → new species on return. |
 | `deathCheckSeconds` | `2` | Dead/frozen-grid probe cadence. |
 | `deathGraceSeconds` | `4` | Delay before rotating a dead grid. |
 | `pauseOnBattery` | `true` | Pause on DC power. |
@@ -75,6 +76,17 @@ Tray menu: species name(s), **Next species**, **Re-seed**, **Random soup**,
 | `catalogDir` | `"catalog"` | Catalog path relative to the exe. |
 | `species` | `""` | Pin one species, e.g. `"named/fission.json"`. |
 | `disableAutoPause` | `false` | Ignore automatic pause signals. |
+| `favorites` | `[]` | Catalog-relative paths marked as favorites. |
+| `favoriteChance` | `0.35` | When Discovery is on and favorites exist, probability of picking from that list. |
+| `discoveryEnabled` | `true` | When `false`, random rotation uses only favorites (falls back to the full catalog if the list is empty). |
+| `randomSoup` | `false` | Initialize every newly loaded or re-seeded species with random soup. |
+
+Favorites are edited from the tray submenu and written back to `config.json`. Selecting a
+favorite loads it on every monitor immediately but does not set the hard `species` pin.
+With Discovery on, each random rotation rolls against `favoriteChance` before falling
+through to the full catalog. With Discovery off, rotation stays in the favorites pool.
+When Random soup is enabled, every species load and **Re-seed** uses random soup instead
+of the species' catalog initialization.
 
 ## Layout
 

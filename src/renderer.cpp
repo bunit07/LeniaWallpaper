@@ -365,7 +365,7 @@ void Renderer::UploadState(const std::vector<float>& rgbaFloats) {
     prevProbe_.clear();
 }
 
-bool Renderer::LoadSpecies(const Species& s, std::mt19937& rng) {
+bool Renderer::LoadSpecies(const Species& s, std::mt19937& rng, bool randomSoup) {
     std::vector<Tap> taps = BuildTaps(s);
     if (taps.empty()) return false;
 
@@ -393,10 +393,11 @@ bool Renderer::LoadSpecies(const Species& s, std::mt19937& rng) {
     species_ = s;
     hasSpecies_ = true;
     tapCount_ = (int)taps.size();
-    UploadState(BuildInitGrid(s, gridW_, gridH_, rng));
+    UploadState(randomSoup ? BuildRandomSoup(s, gridW_, gridH_, rng)
+                           : BuildInitGrid(s, gridW_, gridH_, rng));
     BakeNameOverlay();
     LogLine("species: %s (R=%.1f T=%.1f kernels=%d taps=%zu %s)", s.name.c_str(), s.R, s.T,
-            s.numKernels, taps.size(), s.init.isSeed ? "seed" : "soup");
+            s.numKernels, taps.size(), randomSoup || !s.init.isSeed ? "soup" : "seed");
     return true;
 }
 

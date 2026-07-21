@@ -362,6 +362,23 @@ bool Catalog::Load(const std::filesystem::path& catalogDir, std::string* err) {
     return true;
 }
 
+std::string Catalog::NameForPath(const std::string& relPath) const {
+    for (const Entry& e : entries_) {
+        if (e.path == relPath) return e.name.empty() ? relPath : e.name;
+    }
+    return relPath;
+}
+
+bool Catalog::LoadPath(const std::string& relPath, Species* out, std::string* err) {
+    Species s;
+    if (!ParseSpecies(dir_ / Utf8ToWide(relPath), &s, err)) return false;
+    s.catalogPath = relPath;
+    if (s.name.empty()) s.name = NameForPath(relPath);
+    AssignDisplayName(s);
+    *out = std::move(s);
+    return true;
+}
+
 bool Catalog::PickRandom(std::mt19937& rng, double maxR, Species* out) {
     if (entries_.empty()) return false;
     std::uniform_int_distribution<size_t> pick(0, entries_.size() - 1);
@@ -374,7 +391,32 @@ bool Catalog::PickRandom(std::mt19937& rng, double maxR, Species* out) {
             continue;
         }
         if (s.R > maxR) continue;  // too expensive for the wallpaper budget
+        s.catalogPath = e.path;
         if (s.name.empty()) s.name = e.name;
+        AssignDisplayName(s);
+        *out = std::move(s);
+        return true;
+    }
+    return false;
+}
+
+bool Catalog::PickRandomFrom(const std::vector<std::string>& paths, std::mt19937& rng, double maxR,
+                            Species* out) {
+    if (paths.empty()) return false;
+    std::vector<size_t> order(paths.size());
+    for (size_t i = 0; i < order.size(); i++) order[i] = i;
+    std::shuffle(order.begin(), order.end(), rng);
+    for (size_t i : order) {
+        const std::string& path = paths[i];
+        Species s;
+        std::string err;
+        if (!ParseSpecies(dir_ / Utf8ToWide(path), &s, &err)) {
+            LogLine("favorite %s: %s", path.c_str(), err.c_str());
+            continue;
+        }
+        if (s.R > maxR) continue;
+        s.catalogPath = path;
+        if (s.name.empty()) s.name = NameForPath(path);
         AssignDisplayName(s);
         *out = std::move(s);
         return true;

@@ -22,7 +22,7 @@ public:
     bool Init(HWND hwnd, int width, int height, int cellScale, std::string* err);
     void Resize(int width, int height);  // caller should reload a species afterwards
 
-    bool LoadSpecies(const Species& s, std::mt19937& rng);
+    bool LoadSpecies(const Species& s, std::mt19937& rng, bool randomSoup = false);
     void ReseedCurrent(bool soup, std::mt19937& rng);
     bool HasSpecies() const { return hasSpecies_; }
     const Species& Current() const { return species_; }

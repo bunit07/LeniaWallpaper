@@ -18,6 +18,7 @@ struct SpeciesInit {
 
 struct Species {
     std::string name;
+    std::string catalogPath;  // catalog-relative path, e.g. "named/fission.json"
     double R = 12.0, T = 2.0;
     int worldSize = 128;   // grid the species was tuned on (seed-stamp density)
     int numKernels = 0;
@@ -71,8 +72,15 @@ class Catalog {
 public:
     bool Load(const std::filesystem::path& catalogDir, std::string* err);
     size_t Count() const { return entries_.size(); }
+    // Index display name for a catalog-relative path; empty if unknown.
+    std::string NameForPath(const std::string& relPath) const;
+    // Load a specific catalog-relative path (no R filter). Sets catalogPath.
+    bool LoadPath(const std::string& relPath, Species* out, std::string* err = nullptr);
     // Random species with R <= maxR; skips unparsable entries. False if none found.
     bool PickRandom(std::mt19937& rng, double maxR, Species* out);
+    // Random pick from an explicit path list with R <= maxR.
+    bool PickRandomFrom(const std::vector<std::string>& paths, std::mt19937& rng, double maxR,
+                        Species* out);
 
 private:
     struct Entry { std::string path, name; };
