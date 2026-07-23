@@ -63,7 +63,7 @@ std::vector<Tap> BuildTaps(const Species& s);
 SimConstants BuildConstants(const Species& s, int gridW, int gridH, int tapCount);
 
 // Initial grid as RGBA float32 (gridW*gridH*4). Honors the species' own init
-// (seed blit centered / low-frequency value-noise soup, ported from the site).
+// (seed blit at a random toroidal pose / low-frequency value-noise soup).
 std::vector<float> BuildInitGrid(const Species& s, int gridW, int gridH, std::mt19937& rng);
 // Random soup regardless of the species init (site's "restart with random soup").
 std::vector<float> BuildRandomSoup(const Species& s, int gridW, int gridH, std::mt19937& rng);

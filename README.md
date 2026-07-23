@@ -77,7 +77,7 @@ Tray menu: species name(s), **Next species**, **Re-seed**, **Random soup** toggl
 | `species` | `""` | Pin one species, e.g. `"named/fission.json"`. |
 | `disableAutoPause` | `false` | Ignore automatic pause signals. |
 | `favorites` | `[]` | Catalog-relative paths marked as favorites. |
-| `favoriteChance` | `0.35` | When Discovery is on and favorites exist, probability of picking from that list. |
+| `favoriteChance` | `0.15` | When Discovery is on and favorites exist, probability of picking from that list. |
 | `discoveryEnabled` | `true` | When `false`, random rotation uses only favorites (falls back to the full catalog if the list is empty). |
 | `randomSoup` | `false` | Initialize every newly loaded or re-seeded species with random soup. |
 

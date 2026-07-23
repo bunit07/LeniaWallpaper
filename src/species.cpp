@@ -311,18 +311,35 @@ std::vector<float> BuildInitGrid(const Species& s, int gridW, int gridH, std::mt
     std::vector<float> data((size_t)gridW * gridH * 4, 0.0f);
     for (size_t i = 0; i < (size_t)gridW * gridH; i++) data[i * 4 + 3] = 1.0f;
 
-    // Always stamp a single seed at grid center; the organism drifts freely after.
-    int ox = (gridW - s.init.sw) / 2;
-    int oy = (gridH - s.init.sh) / 2;
-    for (int y = 0; y < s.init.sh; y++) {
-        int gy = oy + y;
-        if (gy < 0 || gy >= gridH) continue;
-        for (int x = 0; x < s.init.sw; x++) {
-            int gx = ox + x;
-            if (gx < 0 || gx >= gridW) continue;
+    // Random toroidal origin + dihedral orientation so each load/re-seed differs
+    // (plain translation alone is equivalent on a torus).
+    std::uniform_int_distribution<int> posX(0, std::max(1, gridW) - 1);
+    std::uniform_int_distribution<int> posY(0, std::max(1, gridH) - 1);
+    std::uniform_int_distribution<int> orient(0, 7);
+    const int ox = posX(rng);
+    const int oy = posY(rng);
+    const int o = orient(rng);
+    const bool flip = o >= 4;
+    const int rot = o & 3;  // 0, 90, 180, 270 CW
+    const int sw = s.init.sw, sh = s.init.sh;
+
+    auto wrap = [](int v, int n) { return ((v % n) + n) % n; };
+    for (int y = 0; y < sh; y++) {
+        for (int x = 0; x < sw; x++) {
+            int sx = flip ? (sw - 1 - x) : x;
+            int sy = y;
+            int tx = sx, ty = sy;
+            switch (rot) {
+                case 1: tx = sh - 1 - sy; ty = sx; break;          // 90 CW
+                case 2: tx = sw - 1 - sx; ty = sh - 1 - sy; break;  // 180
+                case 3: tx = sy; ty = sw - 1 - sx; break;          // 270 CW
+                default: break;
+            }
+            int gx = wrap(ox + tx, gridW);
+            int gy = wrap(oy + ty, gridH);
             for (int ch = 0; ch < s.init.sc; ch++)
                 data[((size_t)gy * gridW + gx) * 4 + ch] =
-                    s.init.cells[((size_t)y * s.init.sw + x) * s.init.sc + ch];
+                    s.init.cells[((size_t)y * sw + x) * s.init.sc + ch];
         }
     }
     return data;

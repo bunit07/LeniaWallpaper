@@ -254,7 +254,10 @@ bool App::LoadSpeciesOnto(MonitorSurface& s) {
                 preferFavorites = true;
             } else {
                 std::uniform_real_distribution<double> roll(0.0, 1.0);
-                preferFavorites = roll(rng_) < config_.favoriteChance;
+                const double r = roll(rng_);
+                preferFavorites = r < config_.favoriteChance;
+                LogLine("pick roll=%.3f chance=%.3f -> %s", r, config_.favoriteChance,
+                        preferFavorites ? "favorites" : "catalog");
             }
         }
         if (preferFavorites) {
